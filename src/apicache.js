@@ -27,6 +27,24 @@ var logDuration = function(d, prefix) {
   return '\x1b[33m- ' + (prefix ? prefix + ' ' : '') + str + '\x1b[0m'
 }
 
+var _assign = function(O, dictionary) {
+  var target, src;
+
+  // Let target be ToObject(O).
+  target = Object( O );
+
+  // Let src be ToObject(dictionary).
+  src = Object( dictionary );
+
+  // For each own property of src, let key be the property key
+  // and desc be the property descriptor of the property.
+  Object.getOwnPropertyNames(src).forEach(function(key) {
+    target[key] = src[key];
+  });
+
+  return target;
+};
+
 function ApiCache() {
   var memCache = new MemoryCache
 
@@ -173,7 +191,8 @@ function ApiCache() {
         }
       }
 
-      res._apicache.headers = Object.assign({}, res._headers)
+      res._apicache.headers = _assign({}, res._headers)
+      // res._apicache.headers = Object.assign({}, res._headers)
       return res._apicache.writeHead.apply(this, arguments)
     }
 
@@ -215,10 +234,15 @@ function ApiCache() {
 
     var headers = (typeof response.getHeaders === 'function') ? response.getHeaders() : response._headers;
 
-    Object.assign(headers, filterBlacklistedHeaders(cacheObject.headers || {}), {
+    headers = _assign(headers, filterBlacklistedHeaders(cacheObject.headers || {}));
+    headers = _assign(headers, {
       'apicache-store': globalOptions.redisClient ? 'redis' : 'memory',
       'apicache-version': pkg.version
-    })
+    });
+    // Object.assign(headers, filterBlacklistedHeaders(cacheObject.headers || {}), {
+    //   'apicache-store': globalOptions.redisClient ? 'redis' : 'memory',
+    //   'apicache-version': pkg.version
+    // })
 
     // unstringify buffers
     var data = cacheObject.data
@@ -233,7 +257,9 @@ function ApiCache() {
 
   function syncOptions() {
     for (var i in middlewareOptions) {
-      Object.assign(middlewareOptions[i].options, globalOptions, middlewareOptions[i].localOptions)
+      middlewareOptions[i].options = _assign(middlewareOptions[i].options, globalOptions);
+      middlewareOptions[i].options = _assign(middlewareOptions[i].options, middlewareOptions[i].localOptions);
+      // Object.assign(middlewareOptions[i].options, globalOptions, middlewareOptions[i].localOptions)
     }
   }
 
@@ -446,7 +472,8 @@ function ApiCache() {
 
   this.options = function(options) {
     if (options) {
-      Object.assign(globalOptions, options)
+      _assign(globalOptions, options)
+      // Object.assign(globalOptions, options)
       syncOptions()
 
       if ('defaultDuration' in options) {
