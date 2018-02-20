@@ -237,7 +237,8 @@ function ApiCache() {
     headers = _assign(headers, filterBlacklistedHeaders(cacheObject.headers || {}));
     headers = _assign(headers, {
       'apicache-store': globalOptions.redisClient ? 'redis' : 'memory',
-      'apicache-version': pkg.version
+      'apicache-version': pkg.version,
+      'Content-Type': 'application/json'
     });
     // Object.assign(headers, filterBlacklistedHeaders(cacheObject.headers || {}), {
     //   'apicache-store': globalOptions.redisClient ? 'redis' : 'memory',
